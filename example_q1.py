@@ -55,47 +55,46 @@ for f in FILES:
         label.append(utils.LABEL[content])
 
     sr, y = utils.read_wav(f)
-    ##########
-    # TODO: Follow task1 description to give each audio file a key prediction.
 
-    # compute the chromagram of audio data `y`
-    # TODO:
     cxx = librosa.feature.chroma_stft(sr=sr, y=y)
     chromagram.append(cxx)  # store into list for further use
-    # summing up all the chroma features into chroma vector
-    # TODO:
+
     chroma_vector = np.sum(cxx, 1)
-    # finding the maximal value in the chroma vector and considering the note
-    # name corresponding to the maximal value as the tonic pitch
-    # TODO:
     key_ind = np.where(chroma_vector == np.amax(chroma_vector))[0][0]
-    # finding the correlation coefficient between the summed chroma vectors and
-    # the mode templates
-    # Hint: utils.rotate(ar,n) may help you find different key mode template
-    # TODO:
-    mode = dict({'cMajor': [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1], 'cMinor': [
-                1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0]})
-    # print('origin',mode['cMajor'])
-    # print('origin',mode['cMinor'])
-    mode['cMajor'] = utils.rotate(mode['cMajor'],  4-key_ind)
-    mode['cMinor'] = utils.rotate(mode['cMinor'],  4-key_ind)
-    # print('origin',chroma_vector)
-    # chroma_vector = utils.rotate(chroma_vector.tolist(), 10-key_ind)
-    # print('new',chroma_vector)
-    # print('new',mode['cMajor'])
-    # print('new',mode['cMinor'])
-    # print(mode['cMajor'])
-    cMajorCoefficient = pearsonr(chroma_vector, mode['cMajor'])
-    cMinorCoefficient = pearsonr(chroma_vector, mode['cMinor'])
+
+    mode = dict({'cMajor': [4, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1], 'cMinor': [
+                4, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0]})
+    mode['cMajor'] = utils.rotate(mode['cMajor'],  key_ind)
+    mode['cMinor'] = utils.rotate(mode['cMinor'],  key_ind)
+    chroma_vector_ro = utils.rotate(chroma_vector.tolist(),  12-key_ind)
+
+    print('key_ind',key_ind)
+    print('cMajor',mode['cMajor'])
+    print('cMinor',mode['cMinor'])
+    print('chroma_vector',chroma_vector)
+    print('chroma_vector_ro',chroma_vector_ro)
+
+    cMajorCoefficient = pearsonr(chroma_vector_ro, mode['cMajor'])
+    cMinorCoefficient = pearsonr(chroma_vector_ro, mode['cMinor'])
     modePred = ''
+    temp_major = [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1]
+    temp_minor = [1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0]
+    temp_major = utils.rotate(temp_major.tolist(),12-key_ind)
     if (cMajorCoefficient[0] > cMinorCoefficient[0]):
         modePred = key_ind
     else:
         modePred = key_ind+12
 
-    # print(key_ind, modePred)
     modePred = utils.lerch_to_str(modePred)
-    # print('mode', modePred)
+
+    #print(utils.lerch_to_str(modePred))
+#    print('cMajorKey',key_ind, 'cMajorMode',modePred)
+#    print('key_ind',key_ind)
+#    print('cMajor',mode['cMajor'])
+#    print('cMinor',mode['cMinor'])
+#    print('chroma_vector',chroma_vector)
+#    print('chroma_vector_ro',chroma_vector_ro,'\n')
+#
     if DB == 'GTZAN':
         pred[gen].append(modePred)
     else:

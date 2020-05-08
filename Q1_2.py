@@ -22,7 +22,6 @@ else:
 n_fft = 100  # (ms)
 hop_length = 25  # (ms)
 
-# %% Q1
 if DB == 'GTZAN':
     label, pred = defaultdict(list), defaultdict(list)
 else:

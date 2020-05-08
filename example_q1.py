@@ -75,9 +75,15 @@ for f in FILES:
     # TODO:
     mode = dict({'cMajor': [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1], 'cMinor': [
                 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0]})
-    mode['cMajor'] = utils.rotate(mode['cMajor'], 12 - key_ind)
-    mode['cMinor'] = utils.rotate(mode['cMinor'], 12 - key_ind)
-    # print(key_ind)
+    # print('origin',mode['cMajor'])
+    # print('origin',mode['cMinor'])
+    mode['cMajor'] = utils.rotate(mode['cMajor'],  4-key_ind)
+    mode['cMinor'] = utils.rotate(mode['cMinor'],  4-key_ind)
+    # print('origin',chroma_vector)
+    # chroma_vector = utils.rotate(chroma_vector.tolist(), 10-key_ind)
+    # print('new',chroma_vector)
+    # print('new',mode['cMajor'])
+    # print('new',mode['cMinor'])
     # print(mode['cMajor'])
     cMajorCoefficient = pearsonr(chroma_vector, mode['cMajor'])
     cMinorCoefficient = pearsonr(chroma_vector, mode['cMinor'])
@@ -87,6 +93,7 @@ for f in FILES:
     else:
         modePred = key_ind+12
 
+    # print(key_ind, modePred)
     modePred = utils.lerch_to_str(modePred)
     # print('mode', modePred)
     if DB == 'GTZAN':
@@ -112,7 +119,7 @@ if DB == 'GTZAN':
             acc = correct / len(label[g])
         except ZeroDivisionError:
             acc = 0
-        print("{:9s}\t{:8.2f}%".format(g, acc))
+        print("{:9s}\t{:.2%}".format(g, acc))
         label_list += label[g]
         pred_list += pred[g]
 else:
@@ -131,4 +138,4 @@ except ZeroDivisionError:
     acc_all = 0
 ##########
 print("----------")
-print("Overall accuracy:\t{:.2f}%".format(acc_all))
+print("Overall accuracy:\t{:.2%}".format(acc_all))

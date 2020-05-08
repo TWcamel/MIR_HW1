@@ -29,6 +29,7 @@ else:
 
 GENRE = [g.split('/')[2]
          for g in glob(DB+'/wav/*')]
+GENRE.remove('classical')
 print(GENRE)
 n_fft = 100  # (ms)
 hop_length = 25  # (ms)
@@ -99,7 +100,7 @@ for f in FILES:
         ##########
 
 
-print("***** Q1 *****")
+print("***** Q1-GTZAN *****")
 if DB == 'GTZAN':
     label_list, pred_list = list(), list()
     print("Genre\taccuracy")

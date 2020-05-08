@@ -66,24 +66,20 @@ for f in FILES:
                 4, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0]})
     mode['cMajor'] = utils.rotate(mode['cMajor'],  key_ind)
     mode['cMinor'] = utils.rotate(mode['cMinor'],  key_ind)
-    chroma_vector_ro = utils.rotate(chroma_vector.tolist(),  12-key_ind)
 
-    print('key_ind',key_ind)
-    print('cMajor',mode['cMajor'])
-    print('cMinor',mode['cMinor'])
-    print('chroma_vector',chroma_vector)
-    print('chroma_vector_ro',chroma_vector_ro)
+#    print('key_ind',key_ind)
+#    print('cMajor',mode['cMajor'])
+#    print('cMinor',mode['cMinor'])
+#    print('chroma_vector',chroma_vector)
 
-    cMajorCoefficient = pearsonr(chroma_vector_ro, mode['cMajor'])
-    cMinorCoefficient = pearsonr(chroma_vector_ro, mode['cMinor'])
+    cMajorCoefficient = pearsonr(chroma_vector, mode['cMajor'])
+    cMinorCoefficient = pearsonr(chroma_vector, mode['cMinor'])
     modePred = ''
-    temp_major = [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1]
-    temp_minor = [1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0]
-    temp_major = utils.rotate(temp_major.tolist(),12-key_ind)
+    a = (key_ind+3)%12
     if (cMajorCoefficient[0] > cMinorCoefficient[0]):
-        modePred = key_ind
+        modePred = a
     else:
-        modePred = key_ind+12
+        modePred = a+12
 
     modePred = utils.lerch_to_str(modePred)
 

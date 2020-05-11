@@ -5,6 +5,7 @@ import librosa
 import numpy as np
 from scipy.stats import pearsonr
 from tqdm import tqdm
+import mir_eval
 
 import utils  # self-defined utils.py file
 
@@ -79,7 +80,7 @@ while idx<4 and gamma<1001:
         else:
             key_ind = (maxRMinor+15)%24
     
-        #print('key_ind: {}\n'.format(key_ind))
+        # print('key_ind: {}\n'.format(key_ind))
     
         modePred = utils.lerch_to_str(key_ind)
     
@@ -91,36 +92,37 @@ while idx<4 and gamma<1001:
         coffiListsMaj = []
         coffiListsMin = []
     
-    print("***** Q4 *****")
+    print("***** Q4-3 *****")
     if DB == 'GTZAN':
         label_list, pred_list = list(), list()
         print("Genre    \taccuracy")
         for g in GENRE:
-            correct = 0
+            sum = 0
             for acc_len in range(len(label[g])):
-                #print('{}\t{}'.format(label[g][acc_len],pred[g][acc_len]))
-                if label[g][acc_len] == pred[g][acc_len]:
-                    correct += 1
+                score = mir_eval.key.weighted_score(label[g][acc_len], pred[g][acc_len])
+                sum += score
             try:
-                acc = correct / len(label[g])
+                acc = sum / len(label[g])
             except ZeroDivisionError:
                 acc = 0
-            print("{:9s}\t{:.2%}".format(g, acc))
+            print("{:9s}\t{:8.2%}".format(g, acc))
             label_list += label[g]
             pred_list += pred[g]
     else:
         label_list = label
         pred_list = pred
     
-    correct_all = 0
+    sum_all = 0
     for acc_len in range(len(label_list)):
-        if label_list[acc_len] == pred_list[acc_len]:
-            correct_all += 1
+        score_all = mir_eval.key.weighted_score(label_list[acc_len], pred_list[acc_len])
+        sum_all += score_all
     try:
-        acc_all = correct_all / len(label_list)
+        acc_all = sum_all / len(label_list)
     except ZeroDivisionError:
         acc_all = 0
+    ##########
     print("----------")
     print("Overall accuracy:\t{:.2%}".format(acc_all))
+
     idx+=1
     gamma*=10

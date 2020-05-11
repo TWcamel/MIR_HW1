@@ -68,10 +68,10 @@ for f in FILES:
     mode['cMajor'] = utils.rotate(mode['cMajor'],  key_ind)
     mode['cMinor'] = utils.rotate(mode['cMinor'],  key_ind)
 
-#    print('key_ind',key_ind)
-#    print('cMajor',mode['cMajor'])
-#    print('cMinor',mode['cMinor'])
-#    print('chroma_vector',chroma_vector)
+    print('key_ind',key_ind)
+    print('cMajor',mode['cMajor'])
+    print('cMinor',mode['cMinor'])
+    print('chroma_vector',chroma_vector)
 
     cMajorCoefficient = pearsonr(chroma_vector, mode['cMajor'])
     cMinorCoefficient = pearsonr(chroma_vector, mode['cMinor'])

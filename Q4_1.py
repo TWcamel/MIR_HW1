@@ -4,6 +4,7 @@ from collections import defaultdict
 import librosa
 import numpy as np
 from scipy.stats import pearsonr
+from tqdm import tqdm
 
 import utils  # self-defined utils.py file
 
@@ -24,11 +25,14 @@ hop_length = 25  # (ms)
 # %% Q4
 if DB == 'GTZAN':
     label, pred = defaultdict(list), defaultdict(list)
+    RMajor, RMinor = defaultdict(list), defaultdict(list)
+    majorCoefficientList, minorCoefficientList = defaultdict(list), defaultdict(list)
 else:
     label, pred = list(), list()
+    RMajor, RMinor = list(), list()
 chromagram = list()
 gens = list()
-for f in FILES:
+for f in tqdm(FILES):
     f = f.replace('\\', '/')
     # print("file: ", f)
     content = utils.read_keyfile(f, '*.lerch.txt')
@@ -45,28 +49,53 @@ for f in FILES:
     cxx = librosa.feature.chroma_stft(y=y, sr=sr)
     chromagram.append(cxx)  # store into list for further use
     chroma_vector = np.sum(cxx, axis=1)
-    key_ind = np.where(chroma_vector == np.amax(chroma_vector))
-    key_ind = int(key_ind[0])
-    # print('key index: ', key_ind)
-    # print('chroma_vector: ', chroma_vector)
-    KS = {"cMajor": [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88],
-          "cMinor": [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17]}
-    KS['cMajor'] = utils.rotate(KS['cMajor'],  key_ind)
-    KS['cMinor'] = utils.rotate(KS['cMinor'],  key_ind)
+    print('{}'.format(chroma_vector))
+    #print('chroma_vector: ', chroma_vector)
+    KS = {"major": [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88],
+          "minor": [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17]}
+    #KS['major'] = utils.rotate(KS['major'],  key_ind)
+    #KS['minor'] = utils.rotate(KS['minor'],  key_ind)
 
-    cMajorCoefficient = pearsonr(chroma_vector, mode['cMajor'])
-    cMinorCoefficient = pearsonr(chroma_vector, mode['cMinor'])
-    # print(r_co_major[0])
-    # print(r_co_minor[0])
-    modePred = ''
-    a = (key_ind+3)%12
-    if (cMajorCoefficient[0] > cMinorCoefficient[0]):
-        modePred = a
+   #TODO: doesnt know how exact duration works
+
+    majorCoefficient = pearsonr(chroma_vector, KS['major'])
+    minorCoefficient = pearsonr(chroma_vector, KS['minor'])
+    majorCoefficientList[gen].append(chroma_vector)
+    minorCoefficientList[gen].append(chroma_vector)
+    
+    RMajor[gen].append(majorCoefficient[0])
+    RMinor[gen].append(minorCoefficient[0])
+    maxRMajor = np.where(RMajor[gen] == np.amax(RMajor[gen]))
+    maxRMinor = np.where(RMinor[gen] == np.amax(RMinor[gen]))
+    valueOfMaxRMajor = RMajor[gen][int(maxRMajor[0])]
+    valueOfMaxRMinor = RMajor[gen][int(maxRMinor[0])]
+    RMajorInChromaVec = majorCoefficientList[gen][int(maxRMajor[0])]
+    RMinorInChromaVec = minorCoefficientList[gen][int(maxRMinor[0])]
+
+    maxKey_ind = np.where(RMajorInChromaVec == np.amax(RMajorInChromaVec))
+    minKey_ind = np.where(RMinorInChromaVec == np.amax(RMinorInChromaVec))
+    maxKey_ind =  int(maxKey_ind[0])+3%12
+    minKey_ind =  int(minKey_ind[0])+15%24
+
+    if valueOfMaxRMajor > valueOfMaxRMinor:
+        key_ind = np.where(RMajorInChromaVec == np.amax(RMajorInChromaVec))
+        key_ind = (int(key_ind[0])+3)%12
     else:
-        modePred = a+12
+        key_ind = np.where(RMinorInChromaVec == np.amax(RMinorInChromaVec))
+        key_ind = (int(key_ind[0])+15)%24
 
-    modePred = utils.lerch_to_str(modePred)
-    # print('mode', mode)
+    modePred = utils.lerch_to_str(key_ind)
+
+    # print('chroma_vector: ', chroma_vector)
+#    print('key index: \nmax: {}\tmin: {} '.format(maxKey_ind,minKey_ind))
+    #print('mian key index: {} '.format(key_ind))
+#    print('value of R: \nmax: {}\tmin: {} '.format(valueOfMaxRMajor, valueOfMaxRMinor))
+    #print('modePred: {} '.format(modePred))
+#    # print('RMajor\t{}'.format(RMajor[gen]))
+#    print('maxRMajor\t{}'.format(int(maxRMajor[0])))
+#    print('maxRMinor\t{}'.format(int(maxRMinor[0])))
+#    print('{}'.format('\n'))
+
     if DB == 'GTZAN':
         pred[gen].append(modePred)
     else:
@@ -78,8 +107,6 @@ if DB == 'GTZAN':
     label_list, pred_list = list(), list()
     print("Genre    \taccuracy")
     for g in GENRE:
-        # TODO: Calculate the accuracy for each genre
-        # Hint: Use label[g] and pred[g]
         correct = 0
         for acc_len in range(len(label[g])):
             if label[g][acc_len] == pred[g][acc_len]:
@@ -88,15 +115,13 @@ if DB == 'GTZAN':
             acc = correct / len(label[g])
         except ZeroDivisionError:
             acc = 0
-        print("{:9s}\t{:8.2f}%".format(g, acc))
+        print("{:9s}\t{:.2%}".format(g, acc))
         label_list += label[g]
         pred_list += pred[g]
 else:
     label_list = label
     pred_list = pred
 
-# TODO: Calculate the accuracy for all file.
-# Hint1: Use label_list and pred_list.
 correct_all = 0
 for acc_len in range(len(label_list)):
     if label_list[acc_len] == pred_list[acc_len]:
@@ -107,4 +132,4 @@ except ZeroDivisionError:
     acc_all = 0
 ##########
 print("----------")
-print("Overall accuracy:\t{:.2f}%".format(acc_all))
+print("Overall accuracy:\t{:.2%}".format(acc_all))

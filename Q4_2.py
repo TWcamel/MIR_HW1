@@ -63,7 +63,7 @@ for f in FILES:
     chroma_vector = np.sum(cxx, 1)
     key_ind = np.where(chroma_vector == np.amax(chroma_vector))[0][0]
 
-    mode = dict({'cMajor': [4, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1], 'cMinor': [
+    mode = dict({'majorProfile': [4, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1], 'cMinor': [
                 4, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0]})
     mode['cMajor'] = utils.rotate(mode['cMajor'],  key_ind)
     mode['cMinor'] = utils.rotate(mode['cMinor'],  key_ind)

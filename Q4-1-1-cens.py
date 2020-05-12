@@ -16,7 +16,7 @@ else:
     FILES = glob(DB + '/wav/*.wav')
 # print(FILES)
 
-GENRE = [g.replace('\\','/').split('/')[2] for g in glob(DB+'/wav/*')]
+GENRE = [g.replace('\\', '/').split('/')[2] for g in glob(DB+'/wav/*')]
 GENRE.remove('classical')
 print(GENRE)
 n_fft = 100  # (ms)
@@ -33,7 +33,8 @@ for f in tqdm(FILES):
     f = f.replace('\\', '/')
     # print("file: ", f)
     content = utils.read_keyfile(f, '*.lerch.txt')
-    if (int(content) < 0): continue  # skip saving if key not found
+    if (int(content) < 0):
+        continue  # skip saving if key not found
     if DB == 'GTZAN':
         gen = f.split('/')[2]
         label[gen].append(utils.LABEL[int(content)])
@@ -46,34 +47,29 @@ for f in tqdm(FILES):
     cxx = librosa.feature.chroma_cens(y=y, sr=sr)
     chromagram.append(cxx)  # store into list for further use
     chroma_vector = np.sum(cxx, axis=1)
-    # print(chroma_vector)
     key_ind = np.where(chroma_vector == np.amax(chroma_vector))
     key_ind = int(key_ind[0])
-    # print('key index: ', key_ind)
-    # chroma_vector = utils.rotate(chroma_vector.tolist(), 12 - key_ind)
-    # print('chroma_vector: ', chroma_vector)
 
-    MODE = {"major": [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1],
-            "minor": [1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0]}
-    MODE['major'] = utils.rotate(MODE['major'], key_ind)
-    MODE['minor'] = utils.rotate(MODE['minor'], key_ind)
-    r_co_major = pearsonr(chroma_vector, MODE["major"])
-    r_co_minor = pearsonr(chroma_vector, MODE["minor"])
-    # print(r_co_major[0])
-    # print(r_co_minor[0])
-    
+    mode = {"cMajor": [4, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1],
+            "cMinor": [4, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0]}
+    mode['cMajor'] = utils.rotate(mode['cMajor'], key_ind)
+    mode['cMinor'] = utils.rotate(mode['cMinor'], key_ind)
+    r_co_major = pearsonr(chroma_vector, mode["cMajor"])
+    r_co_minor = pearsonr(chroma_vector, mode["cMinor"])
+
     mode = ''
-    Cmajor_annoatation = (key_ind+3)%12
+    Cmajor_annoatation = (key_ind+3) % 12
     if (r_co_major[0] > r_co_minor[0]):
-        mode = Cmajor_annoatation
+        modePred = Cmajor_annoatation
     else:
-        mode = Cmajor_annoatation+12
-    mode = utils.lerch_to_str(mode)
+        modePred = Cmajor_annoatation+12
+    modePred = utils.lerch_to_str(modePred)
     # print('mode', mode)
     if DB == 'GTZAN':
-        pred[gen].append(mode)
+        pred[gen].append(modePred)
     else:
-        pred.append('?')  # you may ignore this when starting with GTZAN dataset
+        # you may ignore this when starting with GTZAN dataset
+        pred.append('?')
     # print(pred[gen])
 
 print("***** Q4 *****")
@@ -111,4 +107,3 @@ except ZeroDivisionError:
 ##########
 print("----------")
 print("Overall accuracy:\t{:.2%}".format(acc_all))
-
